@@ -144,6 +144,8 @@ The following information is available for heater objects such as
   the given heater.
 - `power`: The last setting of the PWM pin (a value between 0.0 and
   1.0) associated with the heater.
+- `can_extrude`: If extruder can extrude (defined by `min_extrude_temp`),
+  available only for [extruder](Config_Reference.md#extruder)
 
 # heaters
 
@@ -344,3 +346,12 @@ The following information is available in the `z_tilt` object (this
 object is available if z_tilt is defined):
 - `applied`: True if the z-tilt leveling process has been run and completed
   successfully.
+
+# neopixel / dotstar
+The following information is available for each `[neopixel led_name]` and
+`[dotstar led_name]` defined in printer.cfg:
+- `color_data`:  An array of objects, with each object containing the RGBW
+  values for a led in the chain.  Note that not all configurations will contain
+  a white value.  Each value is represented as a float from 0 to 1.  For
+  example, the blue value of the second neopixel in a chain could be accessed
+  at `printer["neopixel <config_name>"].colordata[1].B`.
