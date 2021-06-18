@@ -1,6 +1,6 @@
 
 
-This document is meant to describe behavior related to annexed probes.
+This document is meant to describe behavior related to dockable probes.
 These probes are typically microswitches mounted to a printed body that
 attaches to the toolhead through some means of mechanical coupling.
 This coupling is commonly done with magnets though this module can support
@@ -11,19 +11,17 @@ a variety of designs including servo and stepper actuated couplings.
 The minimum requirements for functionality are a config section where the
 following options are specified. Some users may be transitioning from a macro
 based set of commands and many of the options for the `[probe]` config section
-are the same. The `[annexed_probe]` module is first and foremost a `[probe]`
+are the same. The `[dockable_probe]` module is first and foremost a `[probe]`
 with additional functionality added. Any options that can be specified in
-for `[probe]` are valid for `[annexed_probe]` as well.
+for `[probe]` are valid for `[dockable_probe]` as well.
 
 ```
-[annexed_probe]
+[dockable_probe]
 pin:
 z_offset:
 sample_retract_dist:
-dock_position:
-dock_angle:
-detach_angle:
-dock_safe_distance:
+approach_position:
+detach_position:
 check_open_attach:
 dock_fixed_z:
 ```
@@ -33,12 +31,7 @@ required parameters. Certain optional parameters are not required, but highly re
 the [probe calibrate guide](Probe_Calibrate.md) is recommended reading
 for users unfamiliar with probe setup in Klipper.
 
-## Dock Position
-
-The configuration options for the probe include all of the standard options
-found on a normal `[probe]` configuration. There are additional parameters
-that facilitate the necessary toolhead movements to attach and detach
-the probe.
+## Attaching and Detaching Positions
 
 ```
     dock_position: 300, 295, 0
@@ -61,57 +54,30 @@ that the Z position _must_ be known prior to attaching the probe. If the
 probe is mounted in such a way, the Z axis parameter _must_ be supplied,
 and the Z axis _must_ be homed prior to attaching the probe.
 
-## Angles
-
 ```
-    dock_angle: 90
+    approach_position: 300, 250
 ```
 
-The dock may "open" to any angle in a circle. The angle is relative to the
-_direction of travel_ of the toolhead as it leaves the dock location.
-For instance, if the dock opens towards the front of the printer, the angle
-is likely going to be 270 degrees.
+The most common dock designs utilize a sort of fork or arms that extend out
+from the dock. In order to attach the probe to the toolhead, the toolhead must
+move into and away from the dock at a particular angle so that these arms can
+capture the probe body. For magnetically coupled probes, the `approach_position`
+should be defined so that it is far enough away from the probe so that the
+magnets on the probe body are not attracted to the magnets on the toolhead.
 
 ```
-                   x
-           x       |       x
-            \     90      /
-            135          45
-
-       x- 180    [Dock]    0 -x
-
-            225        315
-            /     270     \
-           x       |        x
-                   x
+    detach_position:  250, 295
 ```
 
-```
-    detach_angle:
-```
-Most probes that use magnets require the tool to "slide" the probe off the
-magnetic mount. This is typically done in a move that is perpendicular to the
-angle of approach to attach the probe.
-
-
-## Minimum Safe Distance
-
-```
-    dock_safe_distance: 15
-```
-For magnetically coupled probes, the magnets may begin to try and attach
-themselves to the toolhead too early when the toolhead may be out of alignment
-with the dock. Other docks may be affixed to a servo motor which moves the dock
-into position and may collide the with the toolhead as it actuates. Still more
-probe docks may have long forks which pose a collision hazard.
-
-The combination of `dock_angle` and `dock_safe_distance` determines where
-the tool will move before attempting to move to the `dock_position`. A line
-is extended out from the `dock_position` coordinates along the `dock_angle`
-to the distance specified in `dock_safe_distance`.
-
-It is best to start with a higher than necessary value and adjust it down as
-needed.
+Most probes that use magnets require the toolhead to move in a direction that
+strips the magnets off with a sliding motion. This is to prevent the magnets
+from becoming unseated from repeated pulling and thus affecting probe accuracy.
+The `detach_position` is typically defined as a point that is perpendicular to
+the dock so that when the toolhead moves, the probe stays docked but cleanly
+detaches from the toolhead mount. For magnetically coupled probes, the
+`detach_position` should be defined so that it is far enough away from the
+probe so that the magnets on the probe body are not attracted to the magnets on
+the toolhead.
 
 ## Dock Z location
 
@@ -203,18 +169,6 @@ to an endstop pin that defines how to handle the input from the sensor.
 Prior to attempting to attach the probe, and after attempting to dock it,
 this pin is checked. If the probe is not stowed, an error will be raised and
 further action will be aborted.
-
-```
-    manual_probe_verify:  False
-```
-It is possible to manually set the probe state by calling the `SET_PROBE_STATUS`
-command. This command is disabled by default unless the `manual_probe_verify`
-option is set to "True", `dock_sense_pin` and `probe_sense_pin` are undefined,
-and `check_open_attach` is set to "False".
-
-It is ill advised to use this option unless the probe state is independently
-verified. To set the probe state manually, the SET_PROBE_STATUS must be called
-within the custom gcode sections below.
 
 ```
     dock_retries:   0
@@ -334,36 +288,6 @@ Responds in the gcode terminal with the current status the probe is in. Valid
 states are UNKNOWN, ATTACHED, and DOCKED. This is useful during configuration
 to confirm probe validation methods are working as intended.
 
-```
-    SET_PROBE_STATUS STATE=<UNKNOWN|ATTACHED|DOCKED>
-```
-As previously decribed, this command is only available under certain conditions.
-It is used to manually set the probe state when automatic verification methods
-cannot be used.
-
-## Setting Probe Status Manually
-
-In the case where manual probe states must be set, they must be set within the
-following sections.
-
-```
-    pre_attach_gcode:
-        # Set probe status to "docked" prior to
-        # approaching dock.
-        SET_PROBE_STATUS STATE=DOCKED
-
-    attach_gcode:
-        # It is assumed at this point the probe is
-        # attached, set the status to reflect this
-        SET_PROBE_STATUS STATE=ATTACHED
-
-    detach_gcode:
-        # It is assumed at this point the probe is
-        # docked, set the status to reflect this
-        SET_PROBE_STATUS STATE=DOCKED
-
-```
-
 ## Typical probe execution flow
 
     Probing is Started:
@@ -441,7 +365,7 @@ following sections.
 
 # Use in macros
 
-The annexed_probe module can use a delayed detach so that it does not
+The dockable_probe module can use a delayed detach so that it does not
 repeatedly dock and undock the probe from the toolhead while it is being
 used in the context of a homing macro or slicer start gcode. This works
 in most cases, but if a call to heat-and-wait (M109, M190) or a toolhead move
