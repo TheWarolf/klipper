@@ -21,6 +21,7 @@ class ZCalibrationHelper:
         self.last_z_offset = 0.
         self.config = config
         self.printer = config.get_printer()
+        self.phoming = self.printer.lookup_object('homing')
         self.switch_offset = config.getfloat('switch_offset', 0.0, above=0.)
         self.max_deviation = config.getfloat('max_deviation', 1.0, above=0.)
         self.speed = config.getfloat('speed', 50.0, above=0.)
@@ -43,7 +44,6 @@ class ZCalibrationHelper:
         self.probe_nozzle_site = [
             config.getfloat('probe_nozzle_x'),
             config.getfloat('probe_nozzle_y'),
-            None,
         ]
         self.probe_switch_site = [
             config.getfloat('probe_switch_x'),
