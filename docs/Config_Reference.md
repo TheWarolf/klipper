@@ -132,7 +132,8 @@ enable_pin:
 #   driver must always be enabled.
 rotation_distance:
 #   Distance (in mm) that the axis travels with one full rotation of
-#   the stepper motor. This parameter must be provided.
+#   the stepper motor (or final gear if gear_ratio is specified).
+#   This parameter must be provided.
 microsteps:
 #   The number of microsteps the stepper motor driver uses. This
 #   parameter must be provided.
@@ -1616,6 +1617,22 @@ main printer config file. Wildcards may also be used (eg,
 
 ```
 [include my_other_config.cfg]
+```
+
+## [duplicate_pin_override]
+
+This tool allows a single micro-controller pin to be defined multiple
+times in a config file without normal error checking. This is intended
+for diagnostic and debugging purposes. This section is not needed
+where Klipper supports using the same pin multiple times, and using
+this override may cause confusing and unexpected results.
+
+```
+[duplicate_pin_override]
+pins:
+#   A comma separated list of pins that may be used multiple times in
+#   a config file without normal error checks. This parameter must be
+#   provided.
 ```
 
 # Bed probing hardware
@@ -3911,13 +3928,17 @@ i2c_address:
 ## [samd_sercom]
 
 SAMD SERCOM configuration to specify which pins to use on a given
-SERCOM. One may define one section with the "samd_sercom" prefix per
-SERCOM available. Each SERCOM must be configured prior to using it as
-SPI or I2C peripheral. Place this config section above any other
-section that makes use of SPI or I2C buses.
+SERCOM. One may define any number of sections with a "samd_sercom"
+prefix. Each SERCOM must be configured prior to using it as SPI or I2C
+peripheral. Place this config section above any other section that
+makes use of SPI or I2C buses.
 
 ```
-[samd_sercom sercom0]
+[samd_sercom my_sercom]
+sercom:
+#   The name of the sercom bus to configure in the micro-controller.
+#   Available names are "sercom0", "sercom1", etc.. This parameter
+#   must be provided.
 tx_pin:
 #   MOSI pin for SPI communication, or SDA (data) pin for I2C
 #   communication. The pin must have a valid pinmux configuration
