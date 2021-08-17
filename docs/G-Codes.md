@@ -383,7 +383,8 @@ see the [BL-Touch guide](BLTouch.md)):
 - `BLTOUCH_STORE MODE=<output_mode>`: This stores an output mode in the
   EEPROM of a BLTouch V3.1 Available output_modes are: `5V`, `OD`
 
-### Delta Calibration
+
+## Delta Calibration
 
 The following commands are available when the
 [delta_calibrate config section](Config_Reference.md#linear-delta-kinematics)

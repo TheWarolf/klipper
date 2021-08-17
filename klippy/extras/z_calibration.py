@@ -64,9 +64,11 @@ class ZCalibrationHelper:
         self.gcode = self.printer.lookup_object('gcode')
         self.gcode.register_command('CALIBRATE_Z', self.cmd_CALIBRATE_Z,
                                     desc=self.cmd_CALIBRATE_Z_help)
+
         self.gcode.register_command('PROBE_Z_ACCURACY',
                                     self.cmd_PROBE_Z_ACCURACY,
                                     desc=self.cmd_PROBE_Z_ACCURACY_help)
+
     def get_status(self, eventtime):
         return {'last_query': self.last_state,
                 'last_z_offset': self.last_z_offset}
@@ -137,6 +139,7 @@ class ZCalibrationHelper:
         self._log_config()
         state = CalibrationState(self, gcmd)
         state.calibrate_z()
+
     cmd_PROBE_Z_ACCURACY_help = "Probe Z-Endstop accuracy at Nozzle-Endstop position"
     def cmd_PROBE_Z_ACCURACY(self, gcmd):
         speed = gcmd.get_float("PROBE_SPEED", self.second_speed, above=0.)
@@ -211,6 +214,7 @@ class ZCalibrationHelper:
             return z_sorted[middle]
         # even number of samples
         return self._calc_mean(z_sorted[middle-1:middle+1])
+
     def _log_config(self):
         logging.debug("Z-CALIBRATION: switch_offset=%.3f, max_deviation=%.3f,"
                       " speed=%.3f, samples=%i, tolerance=%.3f, retries=%i,"
@@ -244,13 +248,45 @@ class CalibrationState:
         self.gcmd = gcmd
         self.gcode = helper.gcode
         self.z_endstop = helper.z_endstop
+
         self.probe = helper.printer.lookup_object('probe')
         self.toolhead = helper.printer.lookup_object('toolhead')
         self.gcode_move = helper.printer.lookup_object('gcode_move')
+
+        self.phoming = helper.printer.lookup_object('homing')
+        self.probe = helper.printer.lookup_object('probe')
+        self.toolhead = helper.printer.lookup_object('toolhead')
+        self.gcode_move = helper.printer.lookup_object('gcode_move')
+    def _calc_mean(self, positions):
+        count = float(len(positions))
+        return [sum([pos[i] for pos in positions]) / count
+                for i in range(3)]
+    def _calc_median(self, positions):
+        z_sorted = sorted(positions, key=(lambda p: p[2]))
+        middle = len(positions) // 2
+        if (len(positions) & 1) == 1:
+            # odd number of samples
+            return z_sorted[middle]
+        # even number of samples
+        return self._calc_mean(z_sorted[middle-1:middle+1])
+    def _probe(self, mcu_endstop, z_position, speed):
+            pos = self.toolhead.get_position()
+            pos[2] = z_position
+            # probe
+            curpos = self.phoming.probing_move(mcu_endstop, pos, speed)
+            # retract
+            self.toolhead.manual_move([None, None,
+                                       curpos[2] + self.helper.retract_dist],
+                                      self.probe.lift_speed)
+            self.helper.gcode.respond_info("probe at %.3f,%.3f is z=%.6f"
+                % (curpos[0], curpos[1], curpos[2]))
+            return curpos
+
     def _probe_on_z_endstop(self, site):
         pos = self.toolhead.get_position()
         if pos[2] < self.helper.clearance:
             # no clearance, better to move up
+
             self.helper._move([None, None,
                                pos[2] + self.helper.clearance],
                               self.helper.lift_speed)
@@ -260,12 +296,26 @@ class CalibrationState:
             # first probe just to get down faster
             self.helper._probe(self.z_endstop, self.helper.position_min,
                                self.helper.probing_speed)
+
+            self.toolhead.manual_move([None, None,
+                                       pos[2] + self.helper.clearance],
+                                      self.helper.lift_speed)
+        # move to position
+        self.toolhead.manual_move(list(site), self.helper.speed)
+        if self.helper.first_fast:
+            # first probe just to get down faster
+            self._probe(self.z_endstop, self.helper.position_min,
+                        self.helper.probing_speed)
+
         retries = 0
         positions = []
         while len(positions) < self.helper.samples:
             # probe with second probing speed
+
             curpos = self.helper._probe(self.z_endstop, self.helper.position_min,
                                         self.helper.second_speed)
+
+
             positions.append(curpos[:3])
             # check tolerance
             z_positions = [p[2] for p in positions]
@@ -278,8 +328,11 @@ class CalibrationState:
                 positions = []
         # calculate result
         if self.helper.samples_result == 'median':
+
             return self.helper._calc_median(positions)[2]
         return self.helper._calc_mean(positions)[2]
+
+
     def _probe_on_bed(self, bed_site):
         # calculate bed position by using the probe's offsets
         probe_offsets = self.probe.get_offsets()
@@ -288,6 +341,7 @@ class CalibrationState:
         probe_site[1] -= probe_offsets[1]
         # move to probing position
         pos = self.toolhead.get_position()
+
         self.helper._move([None, None, pos[2] + self.helper.clearance],
                           self.helper.lift_speed)
         self.helper._move(probe_site, self.helper.speed)
@@ -295,6 +349,7 @@ class CalibrationState:
             # fast probe to get down first
             self.helper._probe(self.probe.mcu_probe, self.probe.z_position,
                                self.helper.probing_speed)
+
         # probe it
         return self.probe.run_probe(self.gcmd)[2]
     def _set_new_gcode_offset(self, offset):
@@ -317,9 +372,11 @@ class CalibrationState:
         # probe position on bed
         probe_zero = self._probe_on_bed(self.helper.probe_bed_site)
         # move up by retract_dist
+
         self.helper._move([None, None,
                            probe_zero + self.helper.retract_dist],
                           self.helper.lift_speed)
+
         # calculate the offset
         offset = probe_zero - (switch_zero - nozzle_zero
                                + self.helper.switch_offset)
