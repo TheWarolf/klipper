@@ -1,3 +1,5 @@
+# Configuration reference
+
 This document is a reference for options available in the Klipper
 config file.
 
@@ -6,9 +8,9 @@ to cut-and-paste them into a printer config file. See the
 [installation document](Installation.md) for information on setting up
 Klipper and choosing an initial config file.
 
-# Micro-controller configuration
+## Micro-controller configuration
 
-## Format of micro-controller pin names
+### Format of micro-controller pin names
 
 Many config options require the name of a micro-controller pin.
 Klipper uses the hardware names for these pins - for example `PA4`.
@@ -25,7 +27,7 @@ Note, some config sections may "create" additional pins. Where this
 occurs, the config section defining the pins must be listed in the
 config file before any sections using those pins.
 
-## [mcu]
+### [mcu]
 
 Configuration of the primary micro-controller.
 
@@ -58,7 +60,7 @@ serial:
 #   communicates over a serial port, 'command' otherwise.
 ```
 
-## [mcu my_extra_mcu]
+### [mcu my_extra_mcu]
 
 Additional micro-controllers (one may define any number of sections
 with an "mcu" prefix). Additional micro-controllers introduce
@@ -72,9 +74,9 @@ pins such as "extra_mcu:ar9" may then be used elsewhere in the config
 # See the "mcu" section for configuration parameters.
 ```
 
-# Common kinematic settings
+## Common kinematic settings
 
-## [printer]
+### [printer]
 
 The printer section controls high level printer settings.
 
@@ -109,7 +111,7 @@ max_accel:
 #   decelerate to zero at each corner. The default is 5mm/s.
 ```
 
-## [stepper]
+### [stepper]
 
 Stepper motor definitions. Different printer types (as specified by
 the "kinematics" option in the [printer] config section) require
@@ -117,7 +119,9 @@ different names for the stepper (eg, `stepper_x` vs `stepper_a`).
 Below are common stepper definitions.
 
 See the [rotation distance document](Rotation_Distance.md) for
-information on calculating the `rotation_distance` parameter.
+information on calculating the `rotation_distance` parameter. See the
+[Multi-MCU homing](Multi_MCU_Homing.md) document for information on
+homing using multiple micro-controllers.
 
 ```
 [stepper_x]
@@ -150,8 +154,10 @@ microsteps:
 #   distance the axis travels for one full rotation of the final gear.
 #   The default is to not use a gear ratio.
 endstop_pin:
-#   Endstop switch detection pin. This parameter must be provided for
-#   the X, Y, and Z steppers on cartesian style printers.
+#   Endstop switch detection pin. If this endstop pin is on a
+#   different mcu than the stepper motor then it enables "multi-mcu
+#   homing". This parameter must be provided for the X, Y, and Z
+#   steppers on cartesian style printers.
 #position_min: 0
 #   Minimum valid distance (in mm) the user may command the stepper to
 #   move to.  The default is 0mm.
@@ -184,7 +190,7 @@ position_max:
 #   if near position_min.
 ```
 
-## Cartesian Kinematics
+### Cartesian Kinematics
 
 See [example-cartesian.cfg](../config/example-cartesian.cfg) for an
 example cartesian kinematics config file.
@@ -219,7 +225,7 @@ max_z_accel:
 [stepper_z]
 ```
 
-## Linear Delta Kinematics
+### Linear Delta Kinematics
 
 See [example-delta.cfg](../config/example-delta.cfg) for an example
 linear delta kinematics config file. See the
@@ -300,7 +306,7 @@ radius:
 #   just prior to starting a probe operation. The default is 5.
 ```
 
-## CoreXY Kinematics
+### CoreXY Kinematics
 
 See [example-corexy.cfg](../config/example-corexy.cfg) for an example
 corexy (and h-bot) kinematics file.
@@ -335,7 +341,7 @@ max_z_accel:
 [stepper_z]
 ```
 
-## CoreXZ Kinematics
+### CoreXZ Kinematics
 
 See [example-corexz.cfg](../config/example-corexz.cfg) for an example
 corexz kinematics config file.
@@ -367,7 +373,7 @@ max_z_accel:
 [stepper_z]
 ```
 
-## Hybrid-CoreXY Kinematics
+### Hybrid-CoreXY Kinematics
 
 See [example-hybrid-corexy.cfg](../config/example-hybrid-corexy.cfg)
 for an example hybrid corexy kinematics config file.
@@ -401,7 +407,7 @@ max_z_accel:
 [stepper_z]
 ```
 
-## Hybrid-CoreXZ Kinematics
+### Hybrid-CoreXZ Kinematics
 
 See [example-hybrid-corexz.cfg](../config/example-hybrid-corexz.cfg)
 for an example hybrid corexz kinematics config file.
@@ -435,7 +441,7 @@ max_z_accel:
 [stepper_z]
 ```
 
-## Polar Kinematics
+### Polar Kinematics
 
 See [example-polar.cfg](../config/example-polar.cfg) for an example
 polar kinematics config file.
@@ -478,7 +484,7 @@ max_z_accel:
 [stepper_z]
 ```
 
-## Rotary delta Kinematics
+### Rotary delta Kinematics
 
 See [example-rotary-delta.cfg](../config/example-rotary-delta.cfg) for
 an example rotary delta kinematics config file.
@@ -568,7 +574,7 @@ radius:
 #   just prior to starting a probe operation. The default is 5.
 ```
 
-## Cable winch Kinematics
+### Cable winch Kinematics
 
 See the [example-winch.cfg](../config/example-winch.cfg) for an
 example cable winch kinematics config file.
@@ -601,7 +607,7 @@ anchor_z:
 #   These parameters must be provided.
 ```
 
-## None Kinematics
+### None Kinematics
 
 It is possible to define a special "none" kinematics to disable
 kinematic support in Klipper. This may be useful for controlling
@@ -616,9 +622,9 @@ max_accel: 1
 #   values are not used for "none" kinematics.
 ```
 
-# Common extruder and heated bed support
+## Common extruder and heated bed support
 
-## [extruder]
+### [extruder]
 
 The extruder section is used to describe both the stepper controlling
 the printer extruder and the heater parameters for the nozzle. See the
@@ -632,6 +638,8 @@ dir_pin:
 enable_pin:
 microsteps:
 rotation_distance:
+#full_steps_per_rotation:
+#gear_ratio:
 #   See the "stepper" section for a description of the above parameters.
 nozzle_diameter:
 #   Diameter of the nozzle orifice (in mm). This parameter must be
@@ -699,10 +707,10 @@ sensor_pin:
 #   The resistance (in ohms) of the pullup attached to the thermistor.
 #   This parameter is only valid when the sensor is a thermistor. The
 #   default is 4700 ohms.
-#smooth_time: 2.0
+#smooth_time: 1.0
 #   A time value (in seconds) over which temperature measurements will
 #   be smoothed to reduce the impact of measurement noise. The default
-#   is 2 seconds.
+#   is 1 seconds.
 control:
 #   Control algorithm (either pid or watermark). This parameter must
 #   be provided.
@@ -740,7 +748,7 @@ max_temp:
 #   These parameters must be provided.
 ```
 
-## [heater_bed]
+### [heater_bed]
 
 The heater_bed section describes a heated bed. It uses the same heater
 settings described in the "extruder" section.
@@ -756,9 +764,9 @@ max_temp:
 #   See the "extruder" section for a description of the above parameters.
 ```
 
-# Bed level support
+## Bed level support
 
-## [bed_mesh]
+### [bed_mesh]
 
 Mesh Bed Leveling. One may define a bed_mesh config section to enable
 move transformations that offset the z axis based on a mesh generated
@@ -876,7 +884,7 @@ Visual Examples:
 #   By default no faulty regions are set.
 ```
 
-## [bed_tilt]
+### [bed_tilt]
 
 Bed tilt compensation. One may define a bed_tilt config section to
 enable move transformations that account for a tilted bed. Note that
@@ -913,7 +921,7 @@ information.
 #   just prior to starting a probe operation. The default is 5.
 ```
 
-## [bed_screws]
+### [bed_screws]
 
 Tool to help adjust bed leveling screws. One may define a [bed_screws]
 config section to enable a BED_SCREWS_ADJUST g-code command.
@@ -958,7 +966,7 @@ information.
 #   to a probe_height position. The default is 5.
 ```
 
-## [screws_tilt_adjust]
+### [screws_tilt_adjust]
 
 Tool to help adjust bed screws tilt using Z probe. One may define a
 screws_tilt_adjust config section to enable a SCREWS_TILT_CALCULATE
@@ -1001,7 +1009,7 @@ additional information.
 #   turning the knob clockwise decrease distance.
 ```
 
-## [z_tilt]
+### [z_tilt]
 
 Multiple Z stepper tilt adjustment. This feature enables independent
 adjustment of multiple z steppers (see the "stepper_z1" section) to
@@ -1042,7 +1050,7 @@ extended [G-Code command](G-Codes.md#z-tilt) becomes available.
 #   by observing command output.
 ```
 
-## [quad_gantry_level]
+### [quad_gantry_level]
 
 Moving gantry leveling using 4 independently controlled Z motors.
 Corrects hyperbolic parabola effects (potato chip) on moving gantry
@@ -1092,7 +1100,7 @@ Where x is the (0,0) point on the bed
 #   points differ more than retry_tolerance.
 ```
 
-## [skew_correction]
+### [skew_correction]
 
 Printer Skew Correction. It is possible to use software to correct
 printer skew across 3 planes, xy, xz, yz. This is done by printing a
@@ -1116,18 +1124,18 @@ See also: [extended g-code commands](G-Codes.md#Frame-Expansion-Compensation).
 
 ```
 [frame_expansion_compensation]
-#coeff:
-#   Coefficient of linear expansion for the frame material [μm/m·°C].
-#   E.g. 23.4 μm/m·°C for Misumi A6N01SS-T5 6005A-T5 aluminum alloy.
-#frame_z_length:
-#   Total length of vertical extrusions [mm].
-#gantry_factor:
-#   Relationship between gantry expansion and toolhead Z movement.
-#   Examples:
-#      if 1mm expansion moves toolhead up 1mm, gantry_factor: 1.0
-#      if 1mm expansion moves toolhead up 0.5mm, gantry_factor: 0.5
-#      if 1mm expansion moves toolhead down 1mm, gantry_factor: -1.0
-#   The default is 1.0.
+#temp_coeff:
+#   The temperature coefficient of expansion, in mm/K. For example, a
+#   temp_coeff of 0.01 mm/K will move the Z axis downwards by 0.01 mm for every
+#   Kelvin/degree celcius that the frame temperature increases. Defaults to 0.0,
+#   no offset.
+#temp_sensor:
+#   Temperature sensor to use for frame temp measurement. Use full config
+#   section name without quoutes. E.g. temperature_sensor frame
+#smooth_time:
+#   Smoothing window applied to the temp_sensor, in seconds. Can reduce motor
+#   noise from excessive small corrections in response to sensor noise. The
+#   default is 2.0 seconds.
 #max_comp_z:
 #   Disables compensation above this Z height [mm]. The last computed correction
 #   will remain applied until the toolhead moves below the specified Z position
@@ -1135,15 +1143,6 @@ See also: [extended g-code commands](G-Codes.md#Frame-Expansion-Compensation).
 #max_z_offset:
 #   Maximum absolute compensation that can be applied to the Z axis [mm]. The
 #   default is 99999999.0mm (unlimited).
-#sensor_type:
-#sensor_pin:
-#min_temp:
-#max_temp:
-#   See the "extruder" section for the definition of the above
-#   parameters.
-#gcode_id:
-#   See the "heater_generic" section for the definition of this
-#   parameter.
 z_stepper:
 #   The Z stepper motor linked with the Z endstop, as written in printer.cfg.
 #   Used for triggering reference temperature measurement. Usually 'stepper_z'
@@ -1152,7 +1151,7 @@ z_stepper:
 
 # Customized homing
 
-## [safe_z_home]
+### [safe_z_home]
 
 Safe Z homing. One may use this mechanism to home the Z axis at a
 specific XY coordinate. This is useful if the toolhead, for example
@@ -1181,7 +1180,7 @@ home_xy_position:
 #   homing. The default is False.
 ```
 
-## [homing_override]
+### [homing_override]
 
 Homing override. One may use this mechanism to run a series of g-code
 commands in place of a G28 found in the normal g-code input. This may
@@ -1213,7 +1212,7 @@ gcode:
 #   axis. The default is to not force a position for an axis.
 ```
 
-## [endstop_phase]
+### [endstop_phase]
 
 Stepper phase adjusted endstops. To use this feature, define a config
 section with an "endstop_phase" prefix followed by the name of the
@@ -1250,9 +1249,9 @@ for additional information.
 #   layer will occur on a full step.) The default is False.
 ```
 
-# G-Code macros and events
+## G-Code macros and events
 
-## [gcode_macro]
+### [gcode_macro]
 
 G-Code macros (one may define any number of sections with a
 "gcode_macro" prefix). See the
@@ -1285,7 +1284,7 @@ G-Code macros (one may define any number of sections with a
 #   using the auto completion feature. Default "G-Code macro"
 ```
 
-## [delayed_gcode]
+### [delayed_gcode]
 
 Execute a gcode on a set delay. See the
 [command template guide](Command_Templates.md#delayed-gcodes) and
@@ -1306,7 +1305,7 @@ gcode:
 #   Default is 0.
 ```
 
-## [save_variables]
+### [save_variables]
 
 Support saving variables to disk so that they are retained across
 restarts. See
@@ -1320,7 +1319,7 @@ filename:
 #   variables to disk e.g. ~/variables.cfg
 ```
 
-## [idle_timeout]
+### [idle_timeout]
 
 Idle timeout. An idle timeout is automatically enabled - add an
 explicit idle_timeout config section to change the default settings.
@@ -1336,9 +1335,9 @@ explicit idle_timeout config section to change the default settings.
 #   commands. The default is 600 seconds.
 ```
 
-# Optional G-Code features
+## Optional G-Code features
 
-## [virtual_sdcard]
+### [virtual_sdcard]
 
 A virtual sdcard may be useful if the host machine is not fast enough
 to run OctoPrint well. It allows the Klipper host software to directly
@@ -1355,7 +1354,7 @@ path:
 #   be provided.
 ```
 
-## [sdcard_loop]
+### [sdcard_loop]
 
 Some printers with stage-clearing features, such as a part ejector or
 a belt printer, can find use in looping sections of the sdcard file.
@@ -1370,7 +1369,7 @@ file for a Marlin compatible M808 G-Code macro.
 [sdcard_loop]
 ```
 
-## [force_move]
+### [force_move]
 
 Support manually moving stepper motors for diagnostic purposes. Note,
 using this feature may place the printer in an invalid state - see the
@@ -1383,7 +1382,7 @@ using this feature may place the printer in an invalid state - see the
 #   extended G-Code commands. The default is false.
 ```
 
-## [pause_resume]
+### [pause_resume]
 
 Pause/Resume functionality with support of position capture and
 restore. See the [command reference](G-Codes.md#pause-resume) for more
@@ -1396,7 +1395,7 @@ information.
 #   the captured position (in mm/s). Default is 50.0 mm/s.
 ```
 
-## [firmware_retraction]
+### [firmware_retraction]
 
 Firmware filament retraction. This enables G10 (retract) and G11
 (unretract) GCODE commands issued by many slicers. The parameters
@@ -1419,7 +1418,7 @@ allowing per-filament settings and runtime tuning.
 #   The speed of unretraction, in mm/s. The default is 10 mm/s.
 ```
 
-## [gcode_arcs]
+### [gcode_arcs]
 
 Support for gcode arc (G2/G3) commands.
 
@@ -1433,7 +1432,7 @@ Support for gcode arc (G2/G3) commands.
 #   1mm.
 ```
 
-## [respond]
+### [respond]
 
 Enable the "M118" and "RESPOND" extended
 [commands](G-Codes.md#send-message-respond-to-host).
@@ -1451,9 +1450,9 @@ Enable the "M118" and "RESPOND" extended
 #   override the "default_type".
 ```
 
-# Resonance compensation
+## Resonance compensation
 
-## [input_shaper]
+### [input_shaper]
 
 Enables [resonance compensation](Resonance_Compensation.md). Also see
 the [command reference](G-Codes.md#resonance-compensation).
@@ -1491,7 +1490,7 @@ the [command reference](G-Codes.md#resonance-compensation).
 #   parameter requires no tuning and should not be changed.
 ```
 
-## [adxl345]
+### [adxl345]
 
 Support for ADXL345 accelerometers. This support allows one to query
 accelerometer measurements from the sensor. This enables an
@@ -1528,7 +1527,7 @@ cs_pin:
 #   measurements.
 ```
 
-## [resonance_tester]
+### [resonance_tester]
 
 Support for resonance testing and automatic input shaper calibration.
 In order to use most of the functionality of this module, additional
@@ -1586,9 +1585,9 @@ section of the measuring resonances guide for more information on
 #   (Hz/sec == sec^-2).
 ```
 
-# Config file helpers
+## Config file helpers
 
-## [board_pins]
+### [board_pins]
 
 Board pin aliases (one may define any number of sections with a
 "board_pins" prefix). Use this to define aliases for the pins on a
@@ -1609,7 +1608,7 @@ aliases_<name>:
 #   starting with "aliases_" may be specified.
 ```
 
-## [include]
+### [include]
 
 Include file support. One may include additional config file from the
 main printer config file. Wildcards may also be used (eg,
@@ -1619,7 +1618,7 @@ main printer config file. Wildcards may also be used (eg,
 [include my_other_config.cfg]
 ```
 
-## [duplicate_pin_override]
+### [duplicate_pin_override]
 
 This tool allows a single micro-controller pin to be defined multiple
 times in a config file without normal error checking. This is intended
@@ -1635,9 +1634,9 @@ pins:
 #   provided.
 ```
 
-# Bed probing hardware
+## Bed probing hardware
 
-## [probe]
+### [probe]
 
 Z height probe. One may define this section to enable Z height probing
 hardware. When this section is enabled, PROBE and QUERY_PROBE extended
@@ -1652,7 +1651,9 @@ stepper_z config section.
 ```
 [probe]
 pin:
-#   Probe detection pin. This parameter must be provided.
+#   Probe detection pin. If the pin is on a different microcontroller
+#   than the Z steppers then it enables "multi-mcu homing". This
+#   parameter must be provided.
 #deactivate_on_each_sample: True
 #   This determines if Klipper should execute deactivation gcode
 #   between each probe attempt when performing a multiple probe
@@ -1706,7 +1707,7 @@ z_offset:
 #   not run any special G-Code commands on deactivation.
 ```
 
-## [bltouch]
+### [bltouch]
 
 BLTouch probe. One may define this section (instead of a probe
 section) to enable a BLTouch probe. See [BL-Touch guide](BLTouch.md)
@@ -1763,99 +1764,9 @@ control_pin:
 #   See the "probe" section for information on these parameters.
 ```
 
-## [dockable_probe]
+## Additional stepper motors and extruders
 
-Certain probes are magnetically coupled to the toolhead and stowed
-in a dock when not in use. One should define this section instead
-of a probe section if the probe uses magnets to attach and a dock
-for storage. See [Dockable Probe Guide](Dockable_Probe.md)
-for more detailed information regarding configuration and setup.
-
-```
-[dockable_probe]
-dock_position: 0,0,0
-#   The physical position of the probe dock relative to the origin of
-#   the bed. The coordinates are specified as a comma separated x, y, z
-#   list of values. Certain dock designs are independent of the z axis.
-#   if a z value is provided for these configurations, the z axis will
-#   be raised to that amount in order to prevent collisions.
-#   This parameter is required.
-approach_position: 0,0
-#   The X,Y position where the toolhead needs to be prior to moving into the
-#   dock so that the probe is aligned properly for docking or attaching.
-#   This parameter is required.
-detach_position: 0,0
-#   Similar to the approach_position, the detach_position is the X,Y
-#   where the toolhead is moved after the probe has been docked.
-#   For magnetically coupled probes, this is typically perpendicular to
-#   the approach_position in a direction that does not cause the tool to
-#   collide with the printer.
-#   This parameter is required
-#safe_z_position: 0,0
-#   Optional parameter. If the probe is being used to home the Z
-#   axis, the toolhead will move to these xy coordinates prior to homing.
-#   If this value is not provided, the center of the bed will be used.
-#dock_retries:
-#   The number of times to attempt to attach/dock the probe before raising
-#   and error and aborting probing.
-#attach_speed:
-#detach_speed:
-#travel_speed:
-#   Optional speeds used during various moves. These will default to probe
-#   speed if not specified.
-check_open_attach:     True
-#   The probe status should be verified prior to homing. Setting this option
-#   to true will ensure the probe "endstop" is "open" if the probe is attached
-#   and will abort probing if it reports "triggered" when docked
-#probe_sense_pin:
-#   This supplemental pin can be defined to determine an attached state
-#   instead of check_open_attach
-#dock_sense_pin:
-#   This supplemental pin can be defined to determine a docked state in
-#   addition to probe_sense_pin or check_open_attach
-#allow_delayed_detach: False
-#   When true, the probe will stay attached to the toolhead after the
-#   completion of a command in case there is another command requiring the
-#   use of the probe in the command queue. Once all commands have completed,
-#   the probe is docked. It is recommended to add the DETACH_PROBE command to
-#   macros and slicer start gcode to ensure the probe is correctly detached.
-#   See Annexed_Probe.md for more information
-dock_fixed_z: True
-#   Whether or not the dock is located independently of the Z axis such as
-#   mounted to a moving gantry.
-#pre_attach_gcode:
-#   An optional list of gcode commands to execute prior to attaching the probe
-#attach_gcode:
-#   An optional list of gcode commands used to attach the probe
-#post_attach_gcode:
-#   An optional list of gcode commands to execute immediately after attaching
-#   the probe
-#pre_detach_gcode:
-#   An optional list of gcode commands to execute prior to detaching/docking
-#   the probe
-#detach_gcode:
-#   An optional list of gcode commands used to detach/dock the probe
-#post_detach_gcode:
-#   An optional list of gcode commands to execute immediately after
-#   detaching/docking the probe
-#x_offset:
-#y_offset:
-#z_offset:
-#lift_speed:
-#speed:
-#samples:
-#sample_retract_dist:
-#samples_result:
-#samples_tolerance:
-#samples_tolerance_retries:
-#activate_gcode:
-#deactivate_gcode:
-#   See the "probe" section for information on these parameters.
-```
-
-# Additional stepper motors and extruders
-
-## [stepper_z1]
+### [stepper_z1]
 
 Multi-stepper axes. On a cartesian style printer, the stepper
 controlling a given axis may have additional config blocks defining
@@ -1878,7 +1789,7 @@ at 1 (for example, "stepper_z1", "stepper_z2", etc.).
 #   axis is triggered.
 ```
 
-## [extruder1]
+### [extruder1]
 
 In a multi-extruder printer add an additional extruder section for
 each additional extruder. The additional extruder sections should be
@@ -1904,7 +1815,7 @@ for an example configuration.
 #   reuse an existing heater.
 ```
 
-## [dual_carriage]
+### [dual_carriage]
 
 Support for cartesian printers with dual carriages on a single
 axis. The active carriage is set via the SET_DUAL_CARRIAGE extended
@@ -1935,7 +1846,7 @@ axis:
 #   See the "stepper" section for the definition of the above parameters.
 ```
 
-## [extruder_stepper]
+### [extruder_stepper]
 
 Support for additional steppers synchronized to the movement of an
 extruder (one may define any number of sections with an
@@ -1958,7 +1869,7 @@ more information.
 #   parameters.
 ```
 
-## [manual_stepper]
+### [manual_stepper]
 
 Manual steppers (one may define any number of sections with a
 "manual_stepper" prefix). These are steppers that are controlled by
@@ -1991,9 +1902,9 @@ normal printer kinematics.
 #   MANUAL_STEPPER movement commands.
 ```
 
-# Custom heaters and sensors
+## Custom heaters and sensors
 
-## [verify_heater]
+### [verify_heater]
 
 Heater and temperature sensor verification. Heater verification is
 automatically enabled for each heater that is configured on the
@@ -2031,7 +1942,7 @@ printer. Use verify_heater sections to change the default settings.
 #   value. The default is 2.
 ```
 
-## [homing_heaters]
+### [homing_heaters]
 
 Tool to disable heaters when homing or probing an axis.
 
@@ -2048,7 +1959,7 @@ Tool to disable heaters when homing or probing an axis.
 #   Typical example: extruder, heater_bed
 ```
 
-## [thermistor]
+### [thermistor]
 
 Custom thermistors (one may define any number of sections with a
 "thermistor" prefix). A custom thermistor may be used in the
@@ -2077,7 +1988,7 @@ heater section.
 #   provided when using "beta" to define the thermistor.
 ```
 
-## [adc_temperature]
+### [adc_temperature]
 
 Custom ADC temperature sensors (one may define any number of sections
 with an "adc_temperature" prefix). This allows one to define a custom
@@ -2116,7 +2027,7 @@ section.
 #   least two measurements must be provided.
 ```
 
-## [heater_generic]
+### [heater_generic]
 
 Generic heaters (one may define any number of sections with a
 "heater_generic" prefix). These heaters behave similarly to standard
@@ -2145,7 +2056,7 @@ temperature.
 #   parameters.
 ```
 
-## [temperature_sensor]
+### [temperature_sensor]
 
 Generic temperature sensors. One can define any number of additional
 temperature sensors that are reported via the M105 command.
@@ -2163,14 +2074,14 @@ temperature sensors that are reported via the M105 command.
 #   parameter.
 ```
 
-# Temperature sensors
+## Temperature sensors
 
 Klipper includes definitions for many types of temperature sensors.
 These sensors may be used in any config section that requires a
 temperature sensor (such as an `[extruder]` or `[heated_bed]`
 section).
 
-## Common thermistors
+### Common thermistors
 
 Common thermistors. The following parameters are available in heater
 sections that use one of these sensors.
@@ -2193,7 +2104,7 @@ sensor_pin:
 #   The default is 0 ohms.
 ```
 
-## Common temperature amplifiers
+### Common temperature amplifiers
 
 Common temperature amplifiers. The following parameters are available
 in heater sections that use one of these sensors.
@@ -2211,7 +2122,7 @@ sensor_pin:
 #   The ADC voltage offset (in Volts). The default is 0.
 ```
 
-## Directly connected PT1000 sensor
+### Directly connected PT1000 sensor
 
 Directly connected PT1000 sensor. The following parameters are
 available in heater sections that use one of these sensors.
@@ -2226,7 +2137,7 @@ sensor_pin:
 #   default is 4700 ohms.
 ```
 
-## MAXxxxxx temperature sensors
+### MAXxxxxx temperature sensors
 
 MAXxxxxx serial peripheral interface (SPI) temperature based
 sensors. The following parameters are available in heater sections
@@ -2262,7 +2173,7 @@ sensor_pin:
 #   name in the above list.
 ```
 
-## BMP280/BME280/BME680 temperature sensor
+### BMP280/BME280/BME680 temperature sensor
 
 BMP280/BME280/BME680 two wire interface (I2C) environmental sensors.
 Note that thoose sensors aee not intended for use with extruders and
@@ -2284,7 +2195,7 @@ sensor_type: BME280
 #   above parameters.
 ```
 
-## HTU21D sensor
+### HTU21D sensor
 
 HTU21D family two wire interface (I2C) environmental sensor. Note that
 this sensor is not intended for use with extruders and heater beds,
@@ -2319,7 +2230,7 @@ sensor_type:
 #   Interval in seconds between readings. Default is 30
 ```
 
-## LM75 temperature sensor
+### LM75 temperature sensor
 
 LM75/LM75A two wire (I2C) connected temperature sensors. These sensors
 have range up to 125 C, so are usable for e.g. chamber temperature
@@ -2341,7 +2252,7 @@ sensor_type: lm75
 #   0.5.
 ```
 
-## Builtin micro-controller temperature sensor
+### Builtin micro-controller temperature sensor
 
 The atsam, atsamd, and stm32 micro-controllers contain an internal
 temperature sensor. One can use the "temperature_mcu" sensor to
@@ -2375,7 +2286,7 @@ sensor_type: temperature_mcu
 #   micro-controller specification.
 ```
 
-## Host temperature sensor
+### Host temperature sensor
 
 Temperature from the machine (eg Raspberry Pi) running the host software.
 
@@ -2387,7 +2298,7 @@ sensor_type: temperature_host
 #   system file on a Raspberry Pi computer.
 ```
 
-## DS18B20 temperature sensor
+### DS18B20 temperature sensor
 
 DS18B20 is a 1-wire (w1) digital temperature sensor. Note that this sensor is not intended for use with extruders and heater beds, but rather for monitoring ambient temperature (C). These sensors have range up to 125 C, so are usable for e.g. chamber temperature monitoring. They can also function as simple fan/heater controllers. DS18B20 sensors are only supported on the "host mcu", e.g. the Raspberry Pi. The w1-gpio Linux kernel module must be installed.
 
@@ -2404,9 +2315,9 @@ serial_no:
 #   The micro-controller to read from. Must be the host_mcu
 ```
 
-# Fans
+## Fans
 
-## [fan]
+### [fan]
 
 Print cooling fan.
 
@@ -2471,7 +2382,7 @@ pin:
 #   maximum speed (in RPM) of the fan.
 ```
 
-## [heater_fan]
+### [heater_fan]
 
 Heater cooling fans (one may define any number of sections with a
 "heater_fan" prefix). A "heater fan" is a fan that will be enabled
@@ -2505,7 +2416,7 @@ a shutdown_speed equal to max_power.
 #   is 1.0
 ```
 
-## [controller_fan]
+### [controller_fan]
 
 Controller cooling fan (one may define any number of sections with a
 "controller_fan" prefix). A "controller fan" is a fan that will be
@@ -2548,7 +2459,7 @@ watched component.
 #   default stepper is all of them.
 ```
 
-## [temperature_fan]
+### [temperature_fan]
 
 Temperature-triggered cooling fans (one may define any number of
 sections with a "temperature_fan" prefix). A "temperature fan" is a
@@ -2599,7 +2510,7 @@ additional information.
 #   given id. The default is to not report the temperature via M105.
 ```
 
-## [fan_generic]
+### [fan_generic]
 
 Manually controlled fan (one may define any number of sections with a
 "fan_generic" prefix). The speed of a manually controlled fan is set
@@ -2621,9 +2532,9 @@ with the SET_FAN_SPEED
 #   See the "fan" section for a description of the above parameters.
 ```
 
-# Additional servos, LEDs, buttons, and other pins
+## Additional servos, LEDs, buttons, and other pins
 
-## [servo]
+### [servo]
 
 Servos (one may define any number of sections with a "servo"
 prefix). The servos may be controlled using the SET_SERVO
@@ -2654,7 +2565,7 @@ pin:
 #   send any signal at startup.
 ```
 
-## [neopixel]
+### [neopixel]
 
 Neopixel (aka WS2812) LED support (one may define any number of
 sections with a "neopixel" prefix). One may set the LED color via
@@ -2682,7 +2593,7 @@ pin:
 #   LEDs. The default for each color is 0.
 ```
 
-## [dotstar]
+### [dotstar]
 
 Dotstar (aka APA102) LED support (one may define any number of
 sections with a "dotstar" prefix). One may set the LED color via
@@ -2704,7 +2615,7 @@ clock_pin:
 #   See the "neopixel" section for information on these parameters.
 ```
 
-## [PCA9533]
+### [PCA9533]
 
 PCA9533 LED support. The PCA9533 is used on the mightyboard.
 
@@ -2728,7 +2639,7 @@ PCA9533 LED support. The PCA9533 is used on the mightyboard.
 #   set_led led=my_pca9533 red=1 green=1 blue=1
 ```
 
-## [gcode_button]
+### [gcode_button]
 
 Execute gcode when a button is pressed or released (or when a pin
 changes state). You can check the state of the button by using
@@ -2756,7 +2667,7 @@ pin:
 #   commands on a button release.
 ```
 
-## [output_pin]
+### [output_pin]
 
 Run-time configurable output pins (one may define any number of
 sections with an "output_pin" prefix). Pins configured here will be
@@ -2813,7 +2724,7 @@ pin:
 #   parameter.
 ```
 
-## [static_digital_output]
+### [static_digital_output]
 
 Statically configured digital output pins (one may define any number
 of sections with a "static_digital_output" prefix). Pins configured
@@ -2828,7 +2739,7 @@ pins:
 #   with "!". This parameter must be provided.
 ```
 
-## [multi_pin]
+### [multi_pin]
 
 Multiple pin outputs (one may define any number of sections with a
 "multi_pin" prefix). A multi_pin output creates an internal pin alias
@@ -2845,13 +2756,13 @@ pins:
 #   parameter must be provided.
 ```
 
-# TMC stepper driver configuration
+## TMC stepper driver configuration
 
 Configuration of Trinamic stepper motor drivers in UART/SPI mode.
 Additional information is in the [TMC Drivers guide](TMC_Drivers.md)
 and in the [command reference](G-Codes.md#tmc-stepper-drivers).
 
-## [tmc2130]
+### [tmc2130]
 
 Configure a TMC2130 stepper motor driver via SPI bus. To use this
 feature, define a config section with a "tmc2130" prefix followed by
@@ -2922,7 +2833,7 @@ run_current:
 #   sensorless homing.
 ```
 
-## [tmc2208]
+### [tmc2208]
 
 Configure a TMC2208 (or TMC2224) stepper motor driver via single wire
 UART. To use this feature, define a config section with a "tmc2208"
@@ -2980,7 +2891,7 @@ run_current:
 #   above list.
 ```
 
-## [tmc2209]
+### [tmc2209]
 
 Configure a TMC2209 stepper motor driver via single wire UART. To use
 this feature, define a config section with a "tmc2209" prefix followed
@@ -3030,7 +2941,7 @@ run_current:
 #   sensorless homing.
 ```
 
-## [tmc2660]
+### [tmc2660]
 
 Configure a TMC2660 stepper motor driver via SPI bus. To use this
 feature, define a config section with a tmc2660 prefix followed by the
@@ -3100,7 +3011,7 @@ run_current:
 #   HDEC) is interpreted as the MSB of HSTRT in this case).
 ```
 
-## [tmc5160]
+### [tmc5160]
 
 Configure a TMC5160 stepper motor driver via SPI bus. To use this
 feature, define a config section with a "tmc5160" prefix followed by
@@ -3189,9 +3100,9 @@ run_current:
 #   sensorless homing.
 ```
 
-# Run-time stepper motor current configuration
+## Run-time stepper motor current configuration
 
-## [ad5206]
+### [ad5206]
 
 Statically configured AD5206 digipots connected via SPI bus (one may
 define any number of sections with an "ad5206" prefix).
@@ -3231,7 +3142,7 @@ enable_pin:
 #   default is to not scale the 'channel_x' parameters.
 ```
 
-## [mcp4451]
+### [mcp4451]
 
 Statically configured MCP4451 digipot connected via I2C bus (one may
 define any number of sections with an "mcp4451" prefix).
@@ -3266,7 +3177,7 @@ i2c_address:
 #   to not scale the 'wiper_x' parameters.
 ```
 
-## [mcp4728]
+### [mcp4728]
 
 Statically configured MCP4728 digital-to-analog converter connected
 via I2C bus (one may define any number of sections with an "mcp4728"
@@ -3303,7 +3214,7 @@ prefix).
 #   stepper. The default is to not scale the 'channel_x' parameters.
 ```
 
-## [mcp4018]
+### [mcp4018]
 
 Statically configured MCP4018 digipot connected via two gpio "bit
 banging" pins (one may define any number of sections with an "mcp4018"
@@ -3332,9 +3243,9 @@ wiper:
 #   scale the 'wiper' parameter.
 ```
 
-# Display support
+## Display support
 
-## [display]
+### [display]
 
 Support for a display attached to the micro-controller.
 
@@ -3754,9 +3665,9 @@ information on menu attributes available during template rendering.
 #   mode start or end.
 ```
 
-# Filament sensors
+## Filament sensors
 
-## [filament_switch_sensor]
+### [filament_switch_sensor]
 
 Filament Switch Sensor. Support for filament insert and runout
 detection using a switch sensor, such as an endstop switch.
@@ -3795,7 +3706,7 @@ information.
 #   provided.
 ```
 
-## [filament_motion_sensor]
+### [filament_motion_sensor]
 
 Filament Motion Sensor. Support for filament insert and runout
 detection using an encoder that toggles the output pin during filament
@@ -3823,7 +3734,7 @@ switch_pin:
 #   above parameters.
 ```
 
-## [tsl1401cl_filament_width_sensor]
+### [tsl1401cl_filament_width_sensor]
 
 TSLl401CL Based Filament Width Sensor. See the
 [guide](TSL1401CL_Filament_Width_Sensor.md) for more information.
@@ -3838,7 +3749,7 @@ TSLl401CL Based Filament Width Sensor. See the
 #measurement_delay: 100
 ```
 
-## [hall_filament_width_sensor]
+### [hall_filament_width_sensor]
 
 Hall filament width sensor (see
 [Hall Filament Width Sensor](HallFilamentWidthSensor.md)).
@@ -3894,9 +3805,9 @@ adc2:
 #   above parameters.
 ```
 
-# Board specific hardware support
+## Board specific hardware support
 
-## [sx1509]
+### [sx1509]
 
 Configure an SX1509 I2C to GPIO expander. Due to the delay incurred by
 I2C communication you should NOT use SX1509 pins as stepper enable,
@@ -3927,7 +3838,7 @@ i2c_address:
 #   default is to use the default micro-controller i2c bus.
 ```
 
-## [samd_sercom]
+### [samd_sercom]
 
 SAMD SERCOM configuration to specify which pins to use on a given
 SERCOM. One may define any number of sections with a "samd_sercom"
@@ -3956,7 +3867,7 @@ clk_pin:
 #   for the given SERCOM peripheral. This parameter must be provided.
 ```
 
-## [adc_scaled]
+### [adc_scaled]
 
 Duet2 Maestro analog scaling by vref and vssa readings. Defining an
 adc_scaled section enables virtual adc pins (such as "my_name:PB0")
@@ -3982,7 +3893,7 @@ vssa_pin:
 #   noise. The default is 2 seconds.
 ```
 
-## [replicape]
+### [replicape]
 
 Replicape support - see the [beaglebone guide](beaglebone.md) and the
 [generic-replicape.cfg](../config/generic-replicape.cfg) file for an
@@ -4048,9 +3959,9 @@ host_mcu:
 #   (True sets CFG5 high, False sets it low). The default is True.
 ```
 
-# Other Custom Modules
+## Other Custom Modules
 
-## [palette2]
+### [palette2]
 
 Palette 2 multimaterial support - provides a tighter integration
 supporting Palette 2 devices in connected mode.
@@ -4084,9 +3995,9 @@ serial:
 #   Auto cancel print when ping varation is above this threshold
 ```
 
-# Common bus parameters
+## Common bus parameters
 
-## Common SPI settings
+### Common SPI settings
 
 The following parameters are generally available for devices using an
 SPI bus.
@@ -4108,7 +4019,7 @@ SPI bus.
 #   "software spi".
 ```
 
-## Common I2C settings
+### Common I2C settings
 
 The following parameters are generally available for devices using an
 I2C bus.
