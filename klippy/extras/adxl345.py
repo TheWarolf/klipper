@@ -42,7 +42,7 @@ class ADXL345QueryHelper:
         self.request_end_time = toolhead.get_last_move_time()
         toolhead.wait_moves()
         self.cconn.finalize()
-    def decode_samples(self):
+    def get_samples(self):
         raw_samples = self.cconn.get_messages()
         if not raw_samples:
             return self.samples
@@ -68,7 +68,7 @@ class ADXL345QueryHelper:
                 pass
             f = open(filename, "w")
             f.write("#time,accel_x,accel_y,accel_z\n")
-            samples = self.samples or self.decode_samples()
+            samples = self.samples or self.get_samples()
             for t, accel_x, accel_y, accel_z in samples:
                 f.write("%.6f,%.6f,%.6f,%.6f\n" % (
                     t, accel_x, accel_y, accel_z))
@@ -129,7 +129,7 @@ class ADXLCommandHelper:
         aclient = self.chip.start_internal_client()
         self.printer.lookup_object('toolhead').dwell(1.)
         aclient.finish_measurements()
-        values = aclient.decode_samples()
+        values = aclient.get_samples()
         if not values:
             raise gcmd.error("No adxl345 measurements found")
         _, accel_x, accel_y, accel_z = values[-1]

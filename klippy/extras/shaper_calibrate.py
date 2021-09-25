@@ -292,7 +292,7 @@ class ShaperCalibrate:
         if isinstance(raw_values, np.ndarray):
             data = raw_values
         else:
-            data = np.array(raw_values.decode_samples())
+            data = np.array(raw_values.get_samples())
 
         N = data.shape[0]
         T = data[-1,0] - data[0,0]

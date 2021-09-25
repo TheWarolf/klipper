@@ -358,12 +358,12 @@ class ResonanceTester:
                                 "%s file" % (raw_name,))
                 if helper is None:
                     continue
-                for chip_axis, chip_values in raw_values:
-                    if not chip_values:
+                for chip_axis, aclient in raw_values:
+                    if not aclient.get_samples():
                         raise gcmd.error(
                                 "%s-axis accelerometer measured no data" % (
                                     chip_axis,))
-                    new_data = helper.process_accelerometer_data(chip_values)
+                    new_data = helper.process_accelerometer_data(aclient)
                     self.test.finalize_data(helper, axis, new_data)
                     if calibration_data[axis] is None:
                         calibration_data[axis] = new_data
@@ -460,6 +460,9 @@ class ResonanceTester:
             aclient.finish_measurements()
         helper = shaper_calibrate.ShaperCalibrate(self.printer)
         for chip_axis, aclient in raw_values:
+            if not aclient.get_samples():
+                raise gcmd.error(
+                        "%s-axis accelerometer measured no data" % (chip_axis,))
             data = helper.process_accelerometer_data(aclient)
             vx = data.psd_x.mean()
             vy = data.psd_y.mean()
