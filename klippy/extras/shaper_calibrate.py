@@ -3,10 +3,10 @@
 # Copyright (C) 2020  Dmitry Butyugin <dmbutyugin@google.com>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import collections, importlib, logging, math, multiprocessing
+import collections, importlib, logging, math, multiprocessing, traceback
 
 MIN_FREQ = 5.
-MAX_FREQ = 200.
+MAX_FREQ = 150.
 WINDOW_T_SEC = 0.5
 MAX_SHAPER_FREQ = 150.
 
@@ -127,14 +127,28 @@ INPUT_SHAPERS = [
     InputShaperCfg('3hump_ei', get_3hump_ei_shaper, min_freq=48.),
 ]
 
+def get_input_shaper(shaper_type, shaper_freq, damping_ratio):
+    for shaper_cfg in INPUT_SHAPERS:
+        if shaper_cfg.name == shaper_type:
+            A, T = shaper_cfg.init_func(shaper_freq, damping_ratio)
+            inv_D = 1. / sum(A)
+            n = len(T)
+            # Calculate the input shaper shift
+            ts = sum([A[i] * T[i] for i in range(n)]) * inv_D
+            for i in range(n):
+                A[i] *= inv_D
+                T[i] -= ts
+            return A, T
+    return None
+
 ######################################################################
 # Frequency response calculation and shaper auto-tuning
 ######################################################################
 
 class CalibrationData:
-    def __init__(self, freq_bins, psd_sum, psd_x, psd_y, psd_z):
+    def __init__(self, freq_bins, psd_x, psd_y, psd_z):
         self.freq_bins = freq_bins
-        self.psd_sum = psd_sum
+        self.psd_sum = psd_x + psd_y + psd_z
         self.psd_x = psd_x
         self.psd_y = psd_y
         self.psd_z = psd_z
@@ -250,8 +264,12 @@ class ShaperCalibrate:
         # and the 'DC' term (0 Hz)
         result[1:-1,:] *= 2.
 
+        # Remove constant background noise, e.g. loud unbalanced fans
+        background_noise = np.quantile(result.real, 0.1, axis=-1)
+        filtered_results = result.real - background_noise[:, np.newaxis]
+
         # Welch's algorithm: average response over windows
-        psd = result.real.mean(axis=-1)
+        psd = filtered_results.mean(axis=-1)
 
         # Calculate the frequency bins
         freqs = np.fft.rfftfreq(nfft, 1. / fs)
@@ -264,7 +282,7 @@ class ShaperCalibrate:
         if isinstance(raw_values, np.ndarray):
             data = raw_values
         else:
-            data = np.array(raw_values.decode_samples())
+            data = np.array(raw_values.get_samples())
 
         N = data.shape[0]
         T = data[-1,0] - data[0,0]
@@ -279,7 +297,7 @@ class ShaperCalibrate:
         fx, px = self._psd(data[:,1], SAMPLING_FREQ, M)
         fy, py = self._psd(data[:,2], SAMPLING_FREQ, M)
         fz, pz = self._psd(data[:,3], SAMPLING_FREQ, M)
-        return CalibrationData(fx, px+py+pz, px, py, pz)
+        return CalibrationData(fx, px, py, pz)
 
     def process_accelerometer_data(self, data):
         calibration_data = self.background_process_exec(
