@@ -10,7 +10,10 @@ from textwrap import wrap
 import numpy as np, matplotlib
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                              '..', 'klippy', 'extras'))
-from shaper_calibrate import ShaperCalibrate
+from shaper_calibrate import CalibrationData, ShaperCalibrate
+
+class error(Exception):
+    pass
 
 MAX_TITLE_LENGTH=65
 
@@ -22,30 +25,42 @@ def parse_log(logname, opts):
         if not header.startswith('freq,psd_x,psd_y,psd_z,psd_xyz'):
             # Raw accelerometer data
             return np.loadtxt(logname, comments='#', delimiter=',')
-    # Power spectral density data or shaper calibration data
-    opts.error("File %s does not contain raw accelerometer data and therefore "
-               "is not supported by graph_accelerometer.py script. Please use "
-               "calibrate_shaper.py script to process it instead." % (logname,))
+    # Parse power spectral density data
+    data = np.loadtxt(logname, skiprows=1, comments='#', delimiter=',')
+    calibration_data = CalibrationData(freq_bins=data[:,0], psd_x=data[:,1],
+                                       psd_y=data[:,2], psd_z=data[:,3])
+    calibration_data.set_numpy(np)
+    return calibration_data
 
 ######################################################################
 # Raw accelerometer graphing
 ######################################################################
 
-def plot_accel(data, logname):
-    first_time = data[0, 0]
-    times = data[:,0] - first_time
+def plot_accel(datas, lognames):
     fig, axes = matplotlib.pyplot.subplots(nrows=3, sharex=True)
-    axes[0].set_title("\n".join(wrap("Accelerometer data (%s)" % (logname,),
-                                     MAX_TITLE_LENGTH)))
+    axes[0].set_title("\n".join(wrap(
+        "Accelerometer data (%s)" % (', '.join(lognames)), MAX_TITLE_LENGTH)))
     axis_names = ['x', 'y', 'z']
+    for data, logname in zip(datas, lognames):
+        if isinstance(data, CalibrationData):
+            raise error("Cannot plot raw accelerometer data using the processed"
+                        " resonances, raw_data input is required")
+        first_time = data[0, 0]
+        times = data[:,0] - first_time
+        for i in range(len(axis_names)):
+            avg = data[:,i+1].mean()
+            adata = data[:,i+1] - data[:,i+1].mean()
+            ax = axes[i]
+            label = '\n'.join(wrap(logname, 60)) + ' (%+.3f mm/s^2)' % (-avg,)
+            ax.plot(times, adata, alpha=0.8, label=label)
+    axes[-1].set_xlabel('Time (s)')
+    fontP = matplotlib.font_manager.FontProperties()
+    fontP.set_size('x-small')
     for i in range(len(axis_names)):
-        avg = data[:,i+1].mean()
-        adata = data[:,i+1] - data[:,i+1].mean()
         ax = axes[i]
-        ax.plot(times, adata, alpha=0.8)
         ax.grid(True)
-        ax.set_ylabel('%s accel (%+.3f)\n(mm/s^2)' % (axis_names[i], -avg))
-    axes[-1].set_xlabel('Time (%+.3f)\n(s)' % (-first_time,))
+        ax.legend(loc='best', prop=fontP)
+        ax.set_ylabel('%s accel' % (axis_names[i],))
     fig.tight_layout()
     return fig
 
@@ -56,10 +71,15 @@ def plot_accel(data, logname):
 
 # Calculate estimated "power spectral density"
 def calc_freq_response(data, max_freq):
+    if isinstance(data, CalibrationData):
+        return data
     helper = ShaperCalibrate(printer=None)
     return helper.process_accelerometer_data(data)
 
 def calc_specgram(data, axis):
+    if isinstance(data, CalibrationData):
+        raise error("Cannot calculate the spectrogram using the processed"
+                    " resonances, raw_data input is required")
     N = data.shape[0]
     Fs = N / (data[-1,0] - data[0,0])
     # Round up to a power of 2 for faster FFT
@@ -199,7 +219,7 @@ def main():
     opts = optparse.OptionParser(usage)
     opts.add_option("-o", "--output", type="string", dest="output",
                     default=None, help="filename of output graph")
-    opts.add_option("-f", "--max_freq", type="float", default=200.,
+    opts.add_option("-f", "--max_freq", type="float", default=150.,
                     help="maximum frequency to graph")
     opts.add_option("-r", "--raw", action="store_true",
                     help="graph raw accelerometer data")
@@ -235,9 +255,7 @@ def main():
 
     # Draw graph
     if options.raw:
-        if len(args) > 1:
-            opts.error("Only 1 input is supported in raw mode")
-        fig = plot_accel(datas[0], args[0])
+        fig = plot_accel(datas, args)
     elif options.specgram:
         if len(args) > 1:
             opts.error("Only 1 input is supported in specgram mode")
